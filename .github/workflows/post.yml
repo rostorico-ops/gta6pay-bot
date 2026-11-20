@@ -1,0 +1,29 @@
+name: Post GTA 6 Reel
+on:
+  schedule:
+    - cron: "0 14 * * *"   # 10:00 ET
+    - cron: "0 19 * * *"   # 15:00 ET
+    - cron: "0 0 * * *"    # 20:00 ET
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-dejavu-core
+      - run: pip install -q -r requirements.txt
+      - run: |
+          git config user.name "gta6pay-bot"
+          git config user.email "bot@users.noreply.github.com"
+      - run: python main.py
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      - run: |
+          git add posted.json
+          git diff --cached --quiet || (git commit -qm "update posted" && git push)
